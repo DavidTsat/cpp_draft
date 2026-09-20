@@ -1,0 +1,157 @@
+#include <iostream>
+#include <cstdint>
+
+using namespace std;
+
+template <bool>
+struct CompTimeChecker;
+
+template <>
+struct CompTimeChecker<true> {};
+
+template <bool>
+struct CompTimeCheckerMsg;
+
+template <bool>
+struct CompTimeCheckerMsg
+{
+        CompTimeCheckerMsg(...);
+};
+
+template <>
+struct CompTimeCheckerMsg<false> {};
+
+#define STATIC_CHECK(expr) CompTimeChecker<(expr)>();
+
+#define STATIC_CHECK_MSG(expr, msg) \
+{ \
+        class ERROR_##msg {}; \
+        (void) sizeof(CompTimeCheckerMsg<(expr)>((ERROR_##msg{}))); \
+}
+
+
+template <typename To, typename From>
+To safe_reint_cast(From f)
+{
+//      STATIC_CHECK(sizeof(From) <= sizeof(To));
+        STATIC_CHECK_MSG(sizeof(From) <= sizeof(To), Wrong_Cast);
+
+        return reinterpret_cast<To>(f);
+}
+
+class Interface
+{
+public:
+	virtual void fun() = 0;
+};
+
+template <typename Obj, typename Arg>
+Interface* makeAdapter(const Obj& obj, const Arg& arg)
+{
+	class Adapt : public Interface
+	{
+	public:
+		Adapt(const Obj& obj_, const Arg& arg_) : obj(obj_), arg(arg_) {}
+		void fun() override
+		{
+			obj.call(arg);
+		}
+	private:
+		Obj obj;
+		Arg arg;
+	};
+
+	return new Adapt(obj, arg);
+}
+
+template <int V>
+struct ValueToType
+{
+	enum value {v = V};
+};
+
+template <typename T>
+void foo(const T* t, ValueToType<true> v)
+{
+	T* t2 = t->clone();
+}
+
+template <typename T>
+void foo(const T* t, ValueToType<false> v)
+{
+	T* t2 = new T(*t);
+
+	//...
+	delete t2;
+}
+
+
+template <bool isPolym, typename T>
+void foo(const T* t)
+{
+	foo(t, ValueToType<isPolym>());
+	/*
+	if (isPolym)
+	{
+		T* t2 = t->clone();
+		//...
+	}
+	else
+	{
+		T* t2 = new T(*t);
+		//...
+		delete t2;
+	}
+	*/
+}
+
+struct A
+{
+	virtual A* clone() = 0;
+};
+
+struct B : public A
+{
+	A* clone() override
+	{
+		return new B(*this);
+	}
+};
+
+struct C {};
+
+
+
+template <typename T, typename U>
+T* create(const U& arg)
+{
+	return new T(arg);
+}
+
+struct Widget
+{
+	Widget(const char* name, int c_) : n(name), c(c_) {}
+
+	const char* n;
+	int c;
+};
+
+int main()
+{
+        char c = 4;
+        int* p = safe_reint_cast<int*>(&c);
+
+        cout << uintptr_t(p) << endl;
+
+        uint64_t a1 = 77;
+
+ //       uint32_t a2 = safe_reint_cast<uint32_t>(a1);
+
+	C cc;
+	foo<false>(&cc);
+
+//	Widget* ptr = create<Widget>("abcd");
+	string* pS = create<String>("bbbb");
+	cout << *pS << endl;
+        return 0;
+}
