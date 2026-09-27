@@ -8,6 +8,7 @@
 
 using namespace std;
 
+string ress;
 
 //g++ -O3 -mavx512bw -ftree-vectorize pack.cpp -o pack
 
@@ -227,6 +228,11 @@ void test(string (*f)(const string&), size_t sz)
 //	string restored = unpack(serialized);
 	
 	string ser = f(str);
+
+	if (!ress.empty())
+		assert(ser == ress);
+	else
+		ress = ser;
 	// not to optimize:
 	asm volatile("" : : "g"(ser.data()) : "memory");
 
@@ -246,10 +252,14 @@ int main()
 	test(pack, 100);
 	test(pack_VCL, 100);
 	test(pack_AVX512, 100);
+	ress = "";
 	cout << "\n----------------------------------------\n";
+
 	test(pack, 1024);
 	test(pack_VCL, 1024);
 	test(pack_AVX512, 1024);
+	ress = "";
+
 	cout << "\n----------------------------------------\n";
 	test(pack, 100000);
 	test(pack_VCL, 100000);
