@@ -249,28 +249,28 @@ private:
         template <typename U, typename V>
         struct is_shptr_convertible<U, V> : is_same<decay_t<V>, ShPtr<U>> {};
 
-	template <typename TT>
-	struct is_shptr : false_type {};
+        template <typename TT>
+        struct is_shptr : false_type {};
 
-	template <typename U>
-	struct is_shptr<ShPtr<U>> : true_type {};
+        template <typename U>
+        struct is_shptr<ShPtr<U>> : true_type {};
 
-	template <typename TT>
-	struct is_uptr : false_type {};
+        template <typename TT>
+        struct is_uptr : false_type {};
 
-	template <typename U, typename D>
-	struct is_uptr<Uptr<U, D>> : true_type {};
+        template <typename U, typename D>
+        struct is_uptr<Uptr<U, D>> : true_type {};
 
-	template <typename... Args>
-	struct is_smart_ptr_arg : false_type {};
+        template <typename... Args>
+        struct is_smart_ptr_arg : false_type {};
 
-	template <typename V>
-	struct is_smart_ptr_arg<V> 
-    	: integral_constant<bool, is_shptr<decay_t<V>>::value || is_uptr<decay_t<V>>::value> {};
+        template <typename V>
+        struct is_smart_ptr_arg<V> 
+        : integral_constant<bool, is_shptr<decay_t<V>>::value || is_uptr<decay_t<V>>::value> {};
 
-	template <typename... Args,
+        template <typename... Args,
               typename = enable_if_t<!is_smart_ptr_arg<Args...>::value>>
-	ShPtr(Args&&... args)
+        ShPtr(Args&&... args)
         {
                 ptrImpl_ = new CtrlBlock<T>(forward<Args>(args)...);
                 ptr_ = &(static_cast<CtrlBlock<T>*>(ptrImpl_))->obj_;
