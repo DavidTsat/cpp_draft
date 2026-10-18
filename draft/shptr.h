@@ -59,13 +59,13 @@ public:
                 rShPtr.ptrImpl_ = nullptr;
         }
 
-	template <typename U, typename D, 
-		 typename = enable_if_t<is_convertible_v<U*, PtrType>>
-			 >
-	ShPtr(Uptr<U, D>&& up) noexcept : ShPtr(up.get(), move(up.get_deleter()))
+        template <typename U, typename D, 
+                typename = enable_if_t<is_convertible_v<U*, PtrType>>
+        		>
+        ShPtr(Uptr<U, D>&& up) noexcept : ShPtr(up.get(), move(up.get_deleter()))
 	{
-		up.release();
-	}
+               up.release();
+        }
 
         ShPtr& operator=(const ShPtr& rShPtr)
         {
